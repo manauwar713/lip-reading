@@ -1,30 +1,69 @@
-# -*- coding: utf-8 -*-
-import click
-import logging
-from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+import pathlib
+import yaml
+import sys
+import os
+import shutil
+from sklearn.model_selection import train_test_split
 
+def load_data(path,train_split,data_part,seed):
+    alignment_dir = os.path.join(path,'alignments/s1')
+    s1_dir = os.path.join(path,'s1')
+    alignment_files = [file for file in os.listdir(alignment_dir) if file.endswith('.align')]
+    s1_files = [file for file in os.listdir(s1_dir) if file.endswith('.mpg.')]
+    
+    data_align = alignment_files[:data_part]
+    data_s1 = s1_files[:data_part]
+    slicing = int(train_split*data_part)
+    train_align,test_align = data_align[:slicing],data_align[slicing:]
+    train_s1,test_s1 = data_s1[: slicing],data_align[slicing:]
+    return train_align,test_align,train_s1,test_s1
+    
+    
+    
+def save_data(train_align,test_align,train_s1,test_s1,output_path,path):
+    pathlib.Path(output_path).mkdir(parents=True,exist_ok=True)
+    train_dir = os.path.join(output_path,'train')
+    test_dir = os.path.join(output_path,'test')
+    pathlib.Path(train_dir).mkdir(parents=True,exist_ok=True)
+    pathlib.Path(test_dir).mkdir(parents=True,exist_ok=True)
+    
+    for file_name in train_align:
+        src = os.path.join(path,'alignment/s1',file_name)
+        dst = os.path.join(train_dir,file_name)
+        shutil.copy(src,dst)
+        
+    for file_name in test_align:
+        src = os.path.join(path,'alignment/s1',file_name)
+        dst = os.path.join(test_dir,file_name)
+        shutil.copy(src,dst)
+    
+    for file_name in train_s1:
+        src = os.path.join(path,'s1',file_name)
+        dst = os.path.join(train_dir,file_name)
+        shutil.copy(src,dst)
+        
+    for file_name in test_s1:
+        src = os.path.join(path,'s1',file_name)
+        dst = os.path.join(test_dir,file_name)
+        shutil.copy(src,dst)
+    
+    
 
-@click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
-def main(input_filepath, output_filepath):
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
-    """
-    logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
+def main():
+    curr_dir = pathlib.Path(__file__)
+    home_dir = curr_dir.parent.parent.parent
+    params_file = home_dir.as_posix() + "/params.yaml"
+    params = yaml.safe_load(open(params_file))["make_dataset"]
+    
+    
+    data_path = home_dir.as_posix() + '/data/raw/data'
+    output_path = home_dir.as_posix() + '/data/processed'
+    
+    train_align,test_align,train_s1,test_s1 = load_data(data_path,params['test_split'],params['data_part'],params['seed'])
+    save_data(train_align,test_align,train_s1,test_s1,output_path,data_path)
+
 
 
 if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # not used in this stub but often useful for finding various files
-    project_dir = Path(__file__).resolve().parents[2]
-
-    # find .env automagically by walking up directories until it's found, then
-    # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
-
+    
     main()

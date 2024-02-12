@@ -8,43 +8,53 @@ from sklearn.model_selection import train_test_split
 def load_data(path,train_split,data_part,seed):
     alignment_dir = os.path.join(path,'alignments/s1')
     s1_dir = os.path.join(path,'s1')
-    alignment_files = [file for file in os.listdir(alignment_dir) if file.endswith('.align')]
-    s1_files = [file for file in os.listdir(s1_dir) if file.endswith('.mpg.')]
+    alignment_files = sorted([file for file in os.listdir(alignment_dir) if file.endswith('.align')])
+    #alignment_code = [file.split(".")[0] for file in alignment_files]
+    s1_files = sorted([file for file in os.listdir(s1_dir) if file.endswith('.mpg')])
+    
+        
+        
     
     data_align = alignment_files[:data_part]
+     
     data_s1 = s1_files[:data_part]
+    
     slicing = int(train_split*data_part)
     train_align,test_align = data_align[:slicing],data_align[slicing:]
-    train_s1,test_s1 = data_s1[: slicing],data_align[slicing:]
+    train_s1,test_s1 = data_s1[: slicing],data_s1[slicing:]
     return train_align,test_align,train_s1,test_s1
     
     
     
 def save_data(train_align,test_align,train_s1,test_s1,output_path,path):
     pathlib.Path(output_path).mkdir(parents=True,exist_ok=True)
-    train_dir = os.path.join(output_path,'train')
-    test_dir = os.path.join(output_path,'test')
-    pathlib.Path(train_dir).mkdir(parents=True,exist_ok=True)
-    pathlib.Path(test_dir).mkdir(parents=True,exist_ok=True)
+    train_dir_align = os.path.join(output_path,'train','align')
+    train_dir_s1 = os.path.join(output_path,'train','s1')
+    test_dir_align = os.path.join(output_path,'test','align')
+    test_dir_s1 = os.path.join(output_path,'test','s1') 
+    pathlib.Path(train_dir_align).mkdir(parents=True,exist_ok=True)
+    pathlib.Path(train_dir_s1).mkdir(parents=True,exist_ok=True)
+    pathlib.Path(test_dir_align).mkdir(parents=True,exist_ok=True)
+    pathlib.Path(test_dir_s1).mkdir(parents=True,exist_ok=True)
     
     for file_name in train_align:
-        src = os.path.join(path,'alignment/s1',file_name)
-        dst = os.path.join(train_dir,file_name)
+        src = os.path.join(path,'alignments/s1',file_name)
+        dst = os.path.join(train_dir_align,file_name)
         shutil.copy(src,dst)
         
     for file_name in test_align:
-        src = os.path.join(path,'alignment/s1',file_name)
-        dst = os.path.join(test_dir,file_name)
+        src = os.path.join(path,'alignments/s1',file_name)
+        dst = os.path.join(test_dir_align,file_name)
         shutil.copy(src,dst)
     
     for file_name in train_s1:
         src = os.path.join(path,'s1',file_name)
-        dst = os.path.join(train_dir,file_name)
+        dst = os.path.join(train_dir_s1,file_name)
         shutil.copy(src,dst)
         
     for file_name in test_s1:
         src = os.path.join(path,'s1',file_name)
-        dst = os.path.join(test_dir,file_name)
+        dst = os.path.join(test_dir_s1,file_name)
         shutil.copy(src,dst)
     
     

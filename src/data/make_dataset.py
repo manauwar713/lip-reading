@@ -69,7 +69,7 @@ def main():
     data_path = home_dir.as_posix() + '/data/raw/data'
     output_path = home_dir.as_posix() + '/data/processed'
     
-    train_align,test_align,train_s1,test_s1 = load_data(data_path,params['test_split'],params['data_part'],params['seed'])
+    train_align,test_align,train_s1,test_s1 = load_data(data_path,params['train_split'],params['data_part'],params['seed'])
     save_data(train_align,test_align,train_s1,test_s1,output_path,data_path)
 
 
